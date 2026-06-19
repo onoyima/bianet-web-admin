@@ -67,7 +67,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-[100dvh] flex bg-background">
       <aside className="w-64 border-r border-border bg-sidebar flex-shrink-0 flex flex-col">
         <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-          <span className="font-display font-bold text-xl text-sidebar-foreground">Bia'net</span>
+          <img src="/Bainet-logo.png" alt="Bia'net" className="h-8" />
         </div>
         <ScrollArea className="flex-1">
           <div className="py-4 px-3 space-y-1">

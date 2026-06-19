@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background">
       <header className="px-6 lg:px-12 py-4 flex items-center justify-between border-b border-border bg-card">
-        <div className="font-display font-bold text-2xl text-primary tracking-tight">Bia'net</div>
+        <img src="/Bainet-logo.png" alt="Bia'net" className="h-10" />
         <nav className="flex items-center gap-4">
           <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors">Log In</Link>
           <Link href="/register" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
@@ -53,7 +53,8 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="py-8 px-6 lg:px-12 border-t border-border bg-card text-center text-sm text-muted-foreground">
+      <footer className="py-8 px-6 lg:px-12 border-t border-border bg-card flex flex-col items-center gap-2 text-sm text-muted-foreground">
+        <img src="/Bainet-logo.png" alt="Bia'net" className="h-6 opacity-60" />
         <p>© {new Date().getFullYear()} Bia'net Platform. All rights reserved.</p>
       </footer>
     </div>
