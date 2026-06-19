@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,10 @@ import {
   ArrowLeft,
   Save,
   Building2,
+  Upload,
+  Trash2,
+  Loader2,
+  Plus,
 } from "lucide-react";
 import { customFetch } from "@workspace/api-client-react";
 
@@ -45,6 +49,42 @@ export default function BartarListingDetail() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<BartarListing>>({});
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !listing) return;
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await customFetch<{ url: string; key: string }>("/api/v1/bartar/listings/images/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const currentUrls = listing.imageUrls || [];
+      await updateListing.mutateAsync({ imageUrls: [...currentUrls, result.url] });
+      toast({ title: "Image added", description: "Image uploaded and added to listing." });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err?.data?.error ?? err.message, variant: "destructive" });
+    } finally {
+      setUploadingImage(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveImage = async (urlToRemove: string) => {
+    if (!listing) return;
+    const currentUrls = listing.imageUrls || [];
+    const updatedUrls = currentUrls.filter((url) => url !== urlToRemove);
+    try {
+      await updateListing.mutateAsync({ imageUrls: updatedUrls });
+      toast({ title: "Image removed", description: "Image has been removed from the listing." });
+    } catch (err: any) {
+      toast({ title: "Remove failed", description: err?.data?.error ?? err.message, variant: "destructive" });
+    }
+  };
 
   const { data: listing, isLoading, isError, error } = useQuery({
     queryKey: ["bartarListing", id],
@@ -118,19 +158,48 @@ export default function BartarListingDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-1">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Images</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={uploadingImage}
+              onClick={() => imageInputRef.current?.click()}
+            >
+              {uploadingImage ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+              {uploadingImage ? "Uploading..." : "Add Image"}
+            </Button>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleUploadImage}
+              disabled={uploadingImage}
+            />
           </CardHeader>
           <CardContent>
             {listing.imageUrls && listing.imageUrls.length > 0 ? (
               <div className="grid grid-cols-2 gap-2">
                 {listing.imageUrls.map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt={`Image ${i + 1}`}
-                    className="w-full aspect-square rounded object-cover"
-                  />
+                  <div key={i} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Image ${i + 1}`}
+                      className="w-full aspect-square rounded object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(url)}
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/90"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : (

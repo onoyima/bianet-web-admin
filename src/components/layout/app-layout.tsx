@@ -75,7 +75,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-[100dvh] flex bg-background">
+    <div className="h-dvh overflow-hidden flex bg-background">
       <aside className={`${collapsed ? "w-16" : "w-64"} border-r border-border bg-sidebar flex-shrink-0 flex flex-col transition-all duration-300`}>
         <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
           {!collapsed && <img src="/Bainet-logo.png" alt="Bia'net" className="h-8" />}
