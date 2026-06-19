@@ -1,0 +1,310 @@
+import { useState } from "react";
+import { useParams, useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ArrowLeft,
+  Save,
+  Building2,
+} from "lucide-react";
+import { customFetch } from "@workspace/api-client-react";
+
+interface BartarListing {
+  id: string;
+  sellerId: string;
+  commodity: string;
+  description: string;
+  price: number;
+  currency: string;
+  quantity: number;
+  unit: string;
+  qualityGrade: string | null;
+  status: string;
+  originCountry: string;
+  imageUrls: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export default function BartarListingDetail() {
+  const { id } = useParams();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<Partial<BartarListing>>({});
+
+  const { data: listing, isLoading, isError, error } = useQuery({
+    queryKey: ["bartarListing", id],
+    queryFn: async () => {
+      const res = await customFetch<BartarListing>(`/api/v1/admin/listings/bartar/${id}`);
+      return res;
+    },
+    retry: false,
+  });
+
+  const updateListing = useMutation({
+    mutationFn: async (data: Partial<BartarListing>) => {
+      return customFetch(`/api/v1/admin/listings/bartar/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bartarListing", id] });
+      toast({ title: "Listing updated", description: "Bartar listing updated successfully!" });
+      setIsEditing(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Update failed", description: error.message || "Could not update listing", variant: "destructive" });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (isError || !listing) {
+    const status = (error as any)?.status;
+    const message = (error as any)?.data?.error || error?.message || "Could not load listing";
+    return (
+      <div className="text-center py-12">
+        <Building2 className="h-12 w-12 mx-auto mb-3 opacity-20" />
+        <h2 className="text-xl font-semibold">
+          {status === 404 ? "Listing not found" : "Error loading listing"}
+        </h2>
+        <p className="text-muted-foreground mt-2">
+          {status === 404
+            ? "This listing may have been deleted or you may have followed an invalid link."
+            : message}
+        </p>
+        <Button variant="outline" size="sm" className="mt-4" onClick={() => setLocation("/admin/bartar-listings")}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to listings
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => setLocation("/admin/bartar-listings")}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">{listing.commodity}</h1>
+          <p className="text-muted-foreground">Origin: {listing.originCountry}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle>Images</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {listing.imageUrls && listing.imageUrls.length > 0 ? (
+              <div className="grid grid-cols-2 gap-2">
+                {listing.imageUrls.map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`Image ${i + 1}`}
+                    className="w-full aspect-square rounded object-cover"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Building2 className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                <p>No images</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Details</CardTitle>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (isEditing) {
+                  setIsEditing(false);
+                } else {
+                  setEditData(listing);
+                  setIsEditing(true);
+                }
+              }}
+            >
+              {isEditing ? "Cancel" : "Edit"}
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="commodity">Commodity</Label>
+                    <Input
+                      id="commodity"
+                      value={editData.commodity || ""}
+                      onChange={(e) => setEditData({ ...editData, commodity: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="qualityGrade">Quality Grade</Label>
+                    <Input
+                      id="qualityGrade"
+                      value={editData.qualityGrade || ""}
+                      onChange={(e) => setEditData({ ...editData, qualityGrade: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      value={editData.price || 0}
+                      onChange={(e) => setEditData({ ...editData, price: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select
+                      value={editData.currency || listing.currency}
+                      onValueChange={(val) => setEditData({ ...editData, currency: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NGN">NGN</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      value={editData.quantity || 0}
+                      onChange={(e) => setEditData({ ...editData, quantity: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={editData.description || ""}
+                    onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                    rows={4}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select
+                      value={editData.status || listing.status}
+                      onValueChange={(val) => setEditData({ ...editData, status: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="SOLD">Sold</SelectItem>
+                        <SelectItem value="EXPIRED">Expired</SelectItem>
+                        <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                        <SelectItem value="DRAFT">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="originCountry">Origin Country</Label>
+                    <Input
+                      id="originCountry"
+                      value={editData.originCountry || listing.originCountry}
+                      onChange={(e) => setEditData({ ...editData, originCountry: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="shippingTerms">Shipping Terms</Label>
+                    <Input
+                      id="shippingTerms"
+                      value={editData.shippingTerms || ""}
+                      onChange={(e) => setEditData({ ...editData, shippingTerms: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <Button onClick={() => updateListing.mutate(editData)} disabled={updateListing.isPending}>
+                  {updateListing.isPending ? (
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  ) : <Save className="h-4 w-4 mr-2" />}
+                  {updateListing.isPending ? "Updating..." : "Save Changes"}
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Price</p>
+                    <p className="font-semibold text-lg">
+                      {(listing.currency === "NGN" ? "₦" : "$")}{listing.price.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Quantity</p>
+                    <p className="font-semibold text-lg">{listing.quantity.toLocaleString()} {listing.unit}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Quality Grade</p>
+                    <p className="font-semibold text-lg">{listing.qualityGrade || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status</p>
+                    <p className="font-semibold text-lg">{listing.status}</p>
+                  </div>
+                </div>
+
+                {listing.description && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Description</p>
+                    <p className="text-gray-800">{listing.description}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

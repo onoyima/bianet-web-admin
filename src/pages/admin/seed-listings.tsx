@@ -10,7 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Package, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { RefreshCw, Package, Eye, Edit2, Store } from "lucide-react";
 import { useLocation } from "wouter";
 
 const STATUS_BADGE: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
@@ -25,14 +26,18 @@ interface SeedListing {
   id: string;
   sellerId: string;
   title: string;
-  price: string;
+  price: number;
   currency: string;
-  quantity: string;
+  quantity: number;
   unit: string;
   category: string;
   status: string;
   state: string | null;
   createdAt: string;
+  imageUrls: string[] | null;
+  description: string;
+  isFeatured: boolean;
+  viewCount: number;
 }
 
 interface ListingsResponse {
@@ -46,6 +51,7 @@ export default function AdminSeedListings() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [sellerId, setSellerId] = useState("");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -56,7 +62,8 @@ export default function AdminSeedListings() {
       const params = new URLSearchParams({ page: String(page), limit: "20" });
       if (statusFilter) params.set("status", statusFilter);
       if (categoryFilter) params.set("category", categoryFilter);
-      const res = await fetch(`/api/v1/admin/seed-listings?${params}`, {
+      if (sellerId) params.set("sellerId", sellerId);
+      const res = await fetch(`/api/v1/admin/listings/seed?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch");
@@ -66,7 +73,7 @@ export default function AdminSeedListings() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, categoryFilter, toast]);
+  }, [page, statusFilter, categoryFilter, sellerId, toast]);
 
   useEffect(() => { fetchListings(); }, [fetchListings]);
 
@@ -130,6 +137,15 @@ export default function AdminSeedListings() {
                 <SelectItem value="OTHERS">Others</SelectItem>
               </SelectContent>
             </Select>
+            <div className="relative flex-1 max-w-xs">
+              <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Filter by seller ID..."
+                value={sellerId}
+                onChange={(e) => { setSellerId(e.target.value); setPage(1); }}
+              />
+            </div>
           </div>
 
           {loading ? (
@@ -139,6 +155,7 @@ export default function AdminSeedListings() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Image</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
@@ -152,10 +169,23 @@ export default function AdminSeedListings() {
                 <TableBody>
                   {data.data.map((listing) => (
                     <TableRow key={listing.id}>
+                      <TableCell>
+                        {listing.imageUrls && listing.imageUrls.length > 0 ? (
+                          <img
+                            src={listing.imageUrls[0]}
+                            alt={listing.title}
+                            className="w-12 h-12 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center">
+                            <Package className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium max-w-[200px] truncate">{listing.title}</TableCell>
                       <TableCell><Badge variant="outline">{listing.category}</Badge></TableCell>
-                      <TableCell>{(listing.currency === "NGN" ? "₦" : "$")}{Number(listing.price).toLocaleString()}</TableCell>
-                      <TableCell>{Number(listing.quantity).toLocaleString()} {listing.unit}</TableCell>
+                      <TableCell>{(listing.currency === "NGN" ? "₦" : "$")}{listing.price.toLocaleString()}</TableCell>
+                      <TableCell>{listing.quantity.toLocaleString()} {listing.unit}</TableCell>
                       <TableCell>
                         <Badge variant={STATUS_BADGE[listing.status]?.variant ?? "outline"}>
                           {STATUS_BADGE[listing.status]?.label ?? listing.status}
@@ -165,6 +195,22 @@ export default function AdminSeedListings() {
                       <TableCell className="text-xs">{new Date(listing.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setLocation(`/admin/seed-listings/${listing.id}`)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setLocation(`/admin/seed-listings/${listing.id}`)}
+                          >
+                            <Edit2 className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => toggleStatus(listing.id, listing.status)}>
                             {listing.status === "SUSPENDED" ? "Activate" : "Suspend"}
                           </Button>

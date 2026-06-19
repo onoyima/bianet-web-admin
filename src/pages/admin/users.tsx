@@ -42,9 +42,11 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldAlert,
+  Eye,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import type { UserProfile } from "@workspace/api-client-react";
 
 const ROLE_COLORS: Record<string, string> = {
@@ -60,6 +62,7 @@ const ROLE_COLORS: Record<string, string> = {
 export default function AdminUsers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -206,6 +209,14 @@ export default function AdminUsers() {
                           : <Badge variant="destructive" className="text-xs">Suspended</Badge>}
                       </TableCell>
                       <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setLocation(`/admin/users/${user.id}`)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
                         {user.role !== "ADMIN" && (
                           user.isActive ? (
                             <Button

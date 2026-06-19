@@ -1,11 +1,12 @@
 import { useEffect, ReactNode } from "react";
-import { setAuthTokenGetter, useAuthStore, useLogin, useRegister, useRefreshToken, useLogout } from "@workspace/api-client-react";
+import { setAuthTokenGetter, useAuthStore, useLogin, useRegister, useRefreshToken, useLogout, customFetch } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const token = useAuthStore((s) => s.token);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const setUser = useAuthStore((s) => s.setUser);
   const logout = useAuthStore((s) => s.logout);
   const setLoading = useAuthStore((s) => s.setLoading);
   const [, setLocation] = useLocation();
@@ -17,16 +18,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthTokenGetter(() => token);
   }, [token]);
 
+  // Function to fetch current user profile
+  const fetchUserProfile = async (accessToken: string) => {
+    try {
+      const profile = await customFetch<any>("/api/v1/users/profile", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      setUser(profile);
+      return profile;
+    } catch (err) {
+      console.error("Failed to fetch user profile:", err);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const storedRefresh = localStorage.getItem("refreshToken");
     if (storedRefresh) {
       refreshMutation.mutate(
         { data: { refreshToken: storedRefresh } },
         {
-          onSuccess: (data) => {
-            const existingUser = useAuthStore.getState().user;
-            setAuth(data.accessToken, data.refreshToken, existingUser);
+          onSuccess: async (data) => {
+            setAuth(data.accessToken, data.refreshToken, null); // Set tokens first
             sessionStorage.setItem("accessToken", data.accessToken);
+            // Now fetch the user profile
+            await fetchUserProfile(data.accessToken);
             setLoading(false);
           },
           onError: () => {

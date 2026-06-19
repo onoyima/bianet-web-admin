@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { setBaseUrl } from "@workspace/api-client-react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Login from "@/pages/auth/login";
@@ -15,10 +14,13 @@ import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminKyc from "@/pages/admin/kyc";
 import AdminUsers from "@/pages/admin/users";
+import AdminUserDetail from "@/pages/admin/users/[id]";
+import AdminSeedListings from "@/pages/admin/seed-listings";
+import AdminSeedListingDetail from "@/pages/admin/seed-listings/[id]";
+import AdminBartarListings from "@/pages/admin/bartar-listings";
+import AdminBartarListingDetail from "@/pages/admin/bartar-listings/[id]";
 import AdminLogs from "@/pages/admin/logs";
 import AdminEscrow from "@/pages/admin/escrow";
-import AdminSeedListings from "@/pages/admin/seed-listings";
-import AdminBartarListings from "@/pages/admin/bartar-listings";
 import AdminEducationalContent from "@/pages/admin/educational-content";
 import AdminLogistics from "@/pages/admin/logistics";
 import AdminVendors from "@/pages/admin/vendors";
@@ -26,6 +28,7 @@ import AdminEnterprises from "@/pages/admin/enterprises";
 import AdminOrderManagement from "@/pages/admin/orders";
 import AdminPayments from "@/pages/admin/payments";
 import AdminDeals from "@/pages/admin/deals";
+import AdminFinance from "@/pages/admin/finance";
 import AdminPriceFeed from "@/pages/admin/price-feed";
 import AdminAnalytics from "@/pages/admin/analytics";
 import AdminNotifications from "@/pages/admin/notifications";
@@ -73,10 +76,13 @@ function ProtectedRoutes() {
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/kyc" component={AdminKyc} />
         <Route path="/admin/users" component={AdminUsers} />
+        <Route path="/admin/users/:id" component={AdminUserDetail} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route path="/admin/escrow" component={AdminEscrow} />
         <Route path="/admin/seed-listings" component={AdminSeedListings} />
+        <Route path="/admin/seed-listings/:id" component={AdminSeedListingDetail} />
         <Route path="/admin/bartar-listings" component={AdminBartarListings} />
+        <Route path="/admin/bartar-listings/:id" component={AdminBartarListingDetail} />
         <Route path="/admin/educational-content" component={AdminEducationalContent} />
         <Route path="/admin/logistics" component={AdminLogistics} />
         <Route path="/admin/vendors" component={AdminVendors} />
@@ -85,6 +91,7 @@ function ProtectedRoutes() {
         <Route path="/admin/payments" component={AdminPayments} />
         <Route path="/admin/deals" component={AdminDeals} />
         <Route path="/admin/price-feed" component={AdminPriceFeed} />
+        <Route path="/admin/finance" component={AdminFinance} />
         <Route path="/admin/analytics" component={AdminAnalytics} />
         <Route path="/admin/notifications" component={AdminNotifications} />
         <Route path="/admin/roles" component={AdminRoles} />
@@ -129,7 +136,6 @@ function Router() {
 }
 
 function App() {
-  setBaseUrl(import.meta.env.VITE_API_URL || null);
   return (
     <ErrorBoundary>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
