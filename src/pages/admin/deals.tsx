@@ -28,8 +28,7 @@ export default function AdminDealsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter) params.set("status", statusFilter);
-      const res = await customFetch<any>("/api/v1/bartar/deals?" + params);
-      return res.json();
+      return customFetch<any>("/api/v1/bartar/deals?" + params);
     },
   });
 

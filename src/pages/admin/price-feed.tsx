@@ -25,17 +25,13 @@ export default function AdminPriceFeedPage() {
     queryFn: async () => {
       const params = new URLSearchParams({ limit: "200" });
       if (search) params.set("commodity", search);
-      const res = await customFetch<any>("/api/v1/bartar/price-feed?" + params);
-      return res.json();
+      return customFetch<any[]>("/api/v1/bartar/price-feed?" + params);
     },
   });
 
   const createPrice = useMutation({
-    mutationFn: async (body: any) => {
-      const res = await customFetch<any>("/api/v1/bartar/price-feed", { method: "POST", body: JSON.stringify(body) });
-      if (!res.ok) throw new Error(await res.text());
-      return res.json();
-    },
+    mutationFn: async (body: any) =>
+      customFetch<any>("/api/v1/bartar/price-feed", { method: "POST", body: JSON.stringify(body) }),
     onSuccess: () => {
       toast.success("Price recorded");
       queryClient.invalidateQueries({ queryKey: ["admin-price-feed"] });

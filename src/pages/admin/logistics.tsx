@@ -137,8 +137,8 @@ export default function AdminLogistics() {
     setActionLoading(true);
     try {
       const token = sessionStorage.getItem("accessToken");
-      const res = await fetch(`/api/v1/admin/shipments/${selectedShipment.id}/assign`, {
-        method: "PATCH",
+      const res = await fetch(`/api/v1/admin/logistics/shipments/${selectedShipment.id}/assign`, {
+        method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ providerId: selectedProvider }),
       });
@@ -176,7 +176,7 @@ export default function AdminLogistics() {
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=" ">All Statuses</SelectItem>
+                <SelectItem value="ALL">All Statuses</SelectItem>
                 <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="ASSIGNED">Assigned</SelectItem>
                 <SelectItem value="PICKED_UP">Picked Up</SelectItem>

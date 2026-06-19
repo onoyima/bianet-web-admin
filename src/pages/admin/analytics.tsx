@@ -19,8 +19,7 @@ export default function AdminAnalyticsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-analytics", period],
     queryFn: async () => {
-      const res = await customFetch<any>("/api/v1/admin/analytics/overview?period=" + period);
-      return res.json();
+      return customFetch<any>("/api/v1/admin/analytics/overview?period=" + period);
     },
   });
 
