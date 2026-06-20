@@ -103,7 +103,7 @@ export default function OpsFraudReview() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs">{e.platform ?? "—"}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{new Date(e.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <Dialog open={open && selected?.id === e.id} onOpenChange={(v) => { setOpen(v); if (!v) setSelected(null); }}>
                           <DialogTrigger asChild>
@@ -119,7 +119,7 @@ export default function OpsFraudReview() {
                                 <div><span className="text-muted-foreground">Amount:</span> <span className="font-medium">{e.currency || "NGN"} {e.amount?.toLocaleString()}</span></div>
                                 <div><span className="text-muted-foreground">Status:</span> <Badge variant="outline">{e.status}</Badge></div>
                                 <div><span className="text-muted-foreground">Platform:</span> <span>{e.platform}</span></div>
-                                <div><span className="text-muted-foreground">Created:</span> <span>{new Date(e.createdAt).toLocaleString()}</span></div>
+                                <div><span className="text-muted-foreground">Created:</span> <span>{new Date(e.created_at).toLocaleString()}</span></div>
                               </div>
                               <div className="space-y-2">
                                 <Label>Decision</Label>

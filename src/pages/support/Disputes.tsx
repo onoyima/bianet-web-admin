@@ -127,7 +127,7 @@ export default function SupportDisputes() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs">{e.platform ?? "—"}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{new Date(e.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"

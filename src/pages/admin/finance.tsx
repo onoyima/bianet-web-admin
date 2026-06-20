@@ -38,20 +38,37 @@ interface CommissionLedgerEntry {
 
 interface Subscription {
   id: string;
-  vendorId: string;
-  planId: string;
+  user_id: string;
+  plan_id: string;
   status: string;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  vendor_phone?: string;
+  vendor_email?: string;
+  vendor_first_name?: string;
+  vendor_last_name?: string;
+  vendor_business_name?: string;
+  plan_name?: string;
+  plan_slug?: string;
+  plan_tier?: string;
+  plan_price_kobo?: number;
+  plan_currency?: string;
+  vendor_avatar_url?: string;
 }
 
 interface PayoutRequest {
   id: string;
-  vendorId: string;
+  vendor_id: string;
   amount: number;
   status: string;
-  createdAt: string;
+  created_at: string;
+  vendor_phone?: string;
+  vendor_email?: string;
+  vendor_first_name?: string;
+  vendor_last_name?: string;
+  vendor_business_name?: string;
+  vendor_avatar_url?: string;
 }
 
 interface MonetizationResponse {
@@ -405,7 +422,7 @@ export default function AdminFinance() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Vendor ID</TableHead>
+                        <TableHead>Vendor</TableHead>
                         <TableHead>Plan</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Start Date</TableHead>
@@ -415,15 +432,32 @@ export default function AdminFinance() {
                     <TableBody>
                       {subscriptionsData?.data.map((sub) => {
                         const status = getStatusBadge(sub.status);
+                        const vendorName = sub.vendor_first_name && sub.vendor_last_name
+                          ? `${sub.vendor_first_name} ${sub.vendor_last_name}`
+                          : sub.vendor_business_name || sub.vendor_phone || sub.user_id;
                         return (
                           <TableRow key={sub.id}>
-                            <TableCell className="font-medium">{sub.vendorId}</TableCell>
-                            <TableCell>{sub.planId}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {sub.vendor_avatar_url ? (
+                                  <img src={sub.vendor_avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                                ) : (
+                                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                                    {vendorName.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="font-medium text-sm truncate max-w-[160px]">{vendorName}</p>
+                                  <p className="text-xs text-muted-foreground">{sub.vendor_phone || sub.user_id?.slice(0,8)}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{sub.plan_name || sub.plan_slug || sub.plan_id}</TableCell>
                             <TableCell>
                               <Badge variant={status.variant}>{status.label}</Badge>
                             </TableCell>
-                            <TableCell className="text-xs">{new Date(sub.startDate).toLocaleDateString()}</TableCell>
-                            <TableCell className="text-xs">{new Date(sub.endDate).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-xs">{new Date(sub.start_date).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-xs">{new Date(sub.end_date).toLocaleDateString()}</TableCell>
                           </TableRow>
                         );
                       })}
@@ -487,7 +521,7 @@ export default function AdminFinance() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Vendor ID</TableHead>
+                        <TableHead>Vendor</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Date</TableHead>
@@ -496,15 +530,34 @@ export default function AdminFinance() {
                     <TableBody>
                       {payoutsData?.data.map((payout) => {
                         const status = getStatusBadge(payout.status);
+                        const vendorName = payout.vendor_first_name && payout.vendor_last_name
+                          ? `${payout.vendor_first_name} ${payout.vendor_last_name}`
+                          : payout.vendor_business_name || payout.vendor_phone || payout.vendor_id;
                         return (
                           <TableRow key={payout.id}>
-                            <TableCell className="font-medium">{payout.vendorId}</TableCell>
-                            <TableCell className="font-medium">{formatCurrency(payout.amount)}</TableCell>
-                            <TableCell className="flex items-center gap-2">
-                              {getStatusIcon(payout.status)}
-                              <Badge variant={status.variant}>{status.label}</Badge>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {payout.vendor_avatar_url ? (
+                                  <img src={payout.vendor_avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                                ) : (
+                                  <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                                    {vendorName.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="font-medium text-sm truncate max-w-[160px]">{vendorName}</p>
+                                  <p className="text-xs text-muted-foreground">{payout.vendor_phone || payout.vendor_id?.slice(0,8)}</p>
+                                </div>
+                              </div>
                             </TableCell>
-                            <TableCell className="text-xs">{new Date(payout.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell className="font-medium">{formatCurrency(payout.amount)}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {getStatusIcon(payout.status)}
+                                <Badge variant={status.variant}>{status.label}</Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs">{new Date(payout.created_at).toLocaleDateString()}</TableCell>
                           </TableRow>
                         );
                       })}

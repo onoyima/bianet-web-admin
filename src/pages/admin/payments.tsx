@@ -43,13 +43,13 @@ export default function AdminPayments() {
       setTransactions(
         (res.data as any[]).map((t: any) => ({
           reference: t.reference,
-          user: t.user?.businessName ?? t.user?.phone ?? "—",
+          user: t.user_business_name ?? t.user_phone ?? "—",
           type: t.type,
           amount: t.amount,
           currency: t.currency,
           provider: t.provider,
           status: t.status,
-          date: t.createdAt,
+          date: t.created_at ?? t.createdAt,
         })),
       );
     } catch (e: any) {
@@ -65,12 +65,12 @@ export default function AdminPayments() {
       const res = await adminApi.payments.pendingPayouts();
       setPayouts(
         (res.data as any[]).map((p: any) => ({
-          vendorName: p.vendor.businessName,
+          vendorName: p.vendor_business_name ?? p.vendor?.businessName ?? "—",
           amount: p.amount,
           currency: p.currency,
-          bankName: p.bankName,
-          accountNumber: p.accountNumber,
-          date: p.createdAt,
+          bankName: p.bank_name ?? p.bankName,
+          accountNumber: p.bank_account_no ?? p.accountNumber,
+          date: p.created_at ?? p.createdAt,
         })),
       );
     } catch (e: any) {

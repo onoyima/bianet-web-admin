@@ -33,17 +33,27 @@ const STATUS_BADGE: Record<string, { variant: "default" | "secondary" | "destruc
 interface Escrow {
   id: string;
   platform: string;
-  listingId: string | null;
-  buyerId: string;
-  sellerId: string;
+  listing_id: string | null;
+  buyer_id: string;
+  seller_id: string;
   amount: string;
   currency: string;
   status: string;
-  paymentReference: string | null;
-  disputeReason: string | null;
-  arbitrationNotes: string | null;
-  createdAt: string;
-  updatedAt: string;
+  payment_reference: string | null;
+  dispute_reason: string | null;
+  arbitration_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  buyer_phone?: string;
+  buyer_avatar_url?: string;
+  buyer_first_name?: string;
+  buyer_last_name?: string;
+  buyer_business_name?: string;
+  seller_phone?: string;
+  seller_avatar_url?: string;
+  seller_first_name?: string;
+  seller_last_name?: string;
+  seller_business_name?: string;
 }
 
 interface EscrowResponse {
@@ -57,6 +67,14 @@ function formatAmount(amount: string, currency: string) {
 
 function DialogEscrowDetail({ escrow, open, onClose }: { escrow: Escrow | null; open: boolean; onClose: () => void }) {
   if (!escrow) return null;
+
+  const buyerName = escrow.buyer_business_name || (escrow.buyer_first_name && escrow.buyer_last_name
+    ? `${escrow.buyer_first_name} ${escrow.buyer_last_name}`
+    : escrow.buyer_id);
+  const sellerName = escrow.seller_business_name || (escrow.seller_first_name && escrow.seller_last_name
+    ? `${escrow.seller_first_name} ${escrow.seller_last_name}`
+    : escrow.seller_id);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
@@ -72,31 +90,47 @@ function DialogEscrowDetail({ escrow, open, onClose }: { escrow: Escrow | null; 
             <Badge variant="outline" className="w-fit">{escrow.platform}</Badge>
             <span className="text-muted-foreground">Amount</span>
             <span className="font-semibold">{formatAmount(escrow.amount, escrow.currency)}</span>
-            <span className="text-muted-foreground">Currency</span>
-            <span>{escrow.currency}</span>
             <span className="text-muted-foreground">Status</span>
             <Badge variant={STATUS_BADGE[escrow.status]?.variant ?? "outline"}>
               {STATUS_BADGE[escrow.status]?.label ?? escrow.status}
             </Badge>
-            <span className="text-muted-foreground">Buyer ID</span>
-            <span className="font-mono text-xs">{escrow.buyerId}</span>
-            <span className="text-muted-foreground">Seller ID</span>
-            <span className="font-mono text-xs">{escrow.sellerId}</span>
+            <span className="text-muted-foreground">Buyer</span>
+            <span className="flex items-center gap-2">
+              {escrow.buyer_avatar_url ? (
+                <img src={escrow.buyer_avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
+              ) : (
+                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
+                  {(buyerName[0] ?? "?").toUpperCase()}
+                </div>
+              )}
+              <span>{buyerName}</span>
+            </span>
+            <span className="text-muted-foreground">Seller</span>
+            <span className="flex items-center gap-2">
+              {escrow.seller_avatar_url ? (
+                <img src={escrow.seller_avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
+              ) : (
+                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
+                  {(sellerName[0] ?? "?").toUpperCase()}
+                </div>
+              )}
+              <span>{sellerName}</span>
+            </span>
             <span className="text-muted-foreground">Payment Ref</span>
-            <span className="font-mono text-xs">{escrow.paymentReference ?? "—"}</span>
+            <span className="font-mono text-xs">{escrow.payment_reference ?? "—"}</span>
             <span className="text-muted-foreground">Created</span>
-            <span>{new Date(escrow.createdAt).toLocaleString()}</span>
+            <span>{new Date(escrow.created_at).toLocaleString()}</span>
           </div>
-          {escrow.disputeReason && (
+          {escrow.dispute_reason && (
             <div>
               <span className="text-muted-foreground block mb-1">Dispute Reason</span>
-              <p className="text-sm bg-muted p-2 rounded">{escrow.disputeReason}</p>
+              <p className="text-sm bg-muted p-2 rounded">{escrow.dispute_reason}</p>
             </div>
           )}
-          {escrow.arbitrationNotes && (
+          {escrow.arbitration_notes && (
             <div>
               <span className="text-muted-foreground block mb-1">Arbitration Notes</span>
-              <p className="text-sm bg-muted p-2 rounded">{escrow.arbitrationNotes}</p>
+              <p className="text-sm bg-muted p-2 rounded">{escrow.arbitration_notes}</p>
             </div>
           )}
         </div>
@@ -263,9 +297,43 @@ export default function AdminEscrow() {
                           {STATUS_BADGE[escrow.status]?.label ?? escrow.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{escrow.buyerId.substring(0, 8)}...</TableCell>
-                      <TableCell className="font-mono text-xs">{escrow.sellerId.substring(0, 8)}...</TableCell>
-                      <TableCell className="text-xs">{new Date(escrow.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {escrow.buyer_avatar_url ? (
+                            <img src={escrow.buyer_avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                          ) : (
+                            <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
+                              {(escrow.buyer_first_name?.[0] ?? escrow.buyer_id?.[0] ?? "?").toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate max-w-[120px]">
+                              {escrow.buyer_business_name || (escrow.buyer_first_name && escrow.buyer_last_name
+                                ? `${escrow.buyer_first_name} ${escrow.buyer_last_name}`
+                                : escrow.buyer_id?.substring(0, 8) + "...")}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {escrow.seller_avatar_url ? (
+                            <img src={escrow.seller_avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+                          ) : (
+                            <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
+                              {(escrow.seller_first_name?.[0] ?? escrow.seller_id?.[0] ?? "?").toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium truncate max-w-[120px]">
+                              {escrow.seller_business_name || (escrow.seller_first_name && escrow.seller_last_name
+                                ? `${escrow.seller_first_name} ${escrow.seller_last_name}`
+                                : escrow.seller_id?.substring(0, 8) + "...")}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs">{new Date(escrow.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => { setSelectedEscrow(escrow); setDetailOpen(true); }}>

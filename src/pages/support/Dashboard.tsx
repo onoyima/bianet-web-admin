@@ -81,7 +81,7 @@ export default function SupportDashboard() {
                       <Badge variant={e.status === "DISPUTED" ? "destructive" : e.status === "HELD" ? "secondary" : "outline"} className="text-xs">{e.status}</Badge>
                       <span className="font-mono text-xs">{e.reference ?? e.id?.substring(0, 8)}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{new Date(e.createdAt).toLocaleDateString()}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleDateString()}</span>
                   </div>
                 ))}
               </div>
