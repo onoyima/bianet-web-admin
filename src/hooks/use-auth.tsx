@@ -1,5 +1,5 @@
 import { useEffect, ReactNode } from "react";
-import { setAuthTokenGetter, useAuthStore, useLogin, useRegister, useRefreshToken, useLogout, customFetch } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setUnauthorizedHandler, useAuthStore, useLogin, useRegister, useRefreshToken, useLogout, customFetch } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -15,8 +15,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshMutation = useRefreshToken();
 
   useEffect(() => {
-    setAuthTokenGetter(() => token);
-  }, [token]);
+    setAuthTokenGetter(() => useAuthStore.getState().token);
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(async () => {
+      const storedRefresh = localStorage.getItem("refreshToken");
+      if (!storedRefresh) {
+        logout();
+        return false;
+      }
+      try {
+        const res = await fetch("/api/v1/auth/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: storedRefresh }),
+        });
+        if (!res.ok) throw new Error("Refresh failed");
+        const data = await res.json();
+        setAuth(data.accessToken, data.refreshToken, useAuthStore.getState().user);
+        sessionStorage.setItem("accessToken", data.accessToken);
+        return true;
+      } catch {
+        const user = useAuthStore.getState().user;
+        if (user) {
+          // Only auto-logout on web when there's a logged-in user whose session expired
+          logout();
+          setLocation("/login");
+        }
+        return false;
+      }
+    });
+  }, []);
 
   // Function to fetch current user profile
   const fetchUserProfile = async (accessToken: string) => {
