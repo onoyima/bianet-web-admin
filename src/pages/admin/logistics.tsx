@@ -9,11 +9,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { RefreshCw, Truck, Eye } from "lucide-react";
 
 const STATUS_BADGE: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
@@ -51,57 +48,14 @@ interface ShipmentsResponse {
   meta: { page: number; limit: number; total: number; totalPages: number };
 }
 
-function ShipmentDetail({ shipment, open, onClose }: { shipment: Shipment | null; open: boolean; onClose: () => void }) {
-  if (!shipment) return null;
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Shipment Detail</DialogTitle>
-          <DialogDescription>Tracking and logistics information</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 text-sm">
-          <div className="grid grid-cols-2 gap-2">
-            <span className="text-muted-foreground">ID</span>
-            <span className="font-mono text-xs">{shipment.id}</span>
-            <span className="text-muted-foreground">Tracking Code</span>
-            <span className="font-mono">{shipment.trackingCode ?? "—"}</span>
-            <span className="text-muted-foreground">Status</span>
-            <Badge variant={STATUS_BADGE[shipment.status]?.variant ?? "outline"} className="w-fit">
-              {STATUS_BADGE[shipment.status]?.label ?? shipment.status}
-            </Badge>
-            <span className="text-muted-foreground">Escrow ID</span>
-            <span className="font-mono text-xs">{shipment.escrowId}</span>
-            <span className="text-muted-foreground">Origin</span>
-            <span>{shipment.originAddress ?? "—"}</span>
-            <span className="text-muted-foreground">Destination</span>
-            <span>{shipment.destinationAddress ?? "—"}</span>
-            <span className="text-muted-foreground">Est. Delivery</span>
-            <span>{shipment.estimatedDeliveryAt ? new Date(shipment.estimatedDeliveryAt).toLocaleDateString() : "—"}</span>
-            <span className="text-muted-foreground">Created</span>
-            <span>{new Date(shipment.createdAt).toLocaleDateString()}</span>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Close</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export default function AdminLogistics() {
   const [data, setData] = useState<ShipmentsResponse | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [assignOpen, setAssignOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const fetchShipments = useCallback(async () => {
     setLoading(true);
@@ -131,30 +85,6 @@ export default function AdminLogistics() {
   }, [page, statusFilter, toast]);
 
   useEffect(() => { fetchShipments(); }, [fetchShipments]);
-
-  const handleAssign = async () => {
-    if (!selectedShipment || !selectedProvider) return;
-    setActionLoading(true);
-    try {
-      const token = sessionStorage.getItem("accessToken");
-      const res = await fetch(`/api/v1/admin/logistics/shipments/${selectedShipment.id}/assign`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ providerId: selectedProvider }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Assignment failed");
-      }
-      toast({ title: "Success", description: "Logistics provider assigned" });
-      setAssignOpen(false);
-      fetchShipments();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -207,7 +137,11 @@ export default function AdminLogistics() {
                   {data.data.map((shipment) => {
                     const provider = providers.find((p) => p.id === shipment.logisticsProviderId);
                     return (
-                      <TableRow key={shipment.id}>
+                      <TableRow
+                        key={shipment.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => setLocation(`/admin/logistics/${shipment.id}`)}
+                      >
                         <TableCell className="font-mono text-xs">{shipment.trackingCode ?? "—"}</TableCell>
                         <TableCell>
                           <Badge variant={STATUS_BADGE[shipment.status]?.variant ?? "outline"}>
@@ -220,16 +154,13 @@ export default function AdminLogistics() {
                         </TableCell>
                         <TableCell className="text-xs">{new Date(shipment.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => { setSelectedShipment(shipment); setDetailOpen(true); }}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            {shipment.status === "PENDING" && (
-                              <Button variant="ghost" size="sm" onClick={() => { setSelectedShipment(shipment); setSelectedProvider(""); setAssignOpen(true); }}>
-                                Assign
-                              </Button>
-                            )}
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => { e.stopPropagation(); setLocation(`/admin/logistics/${shipment.id}`); }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -252,41 +183,6 @@ export default function AdminLogistics() {
           )}
         </CardContent>
       </Card>
-
-      <ShipmentDetail shipment={selectedShipment} open={detailOpen} onClose={() => setDetailOpen(false)} />
-
-      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign Logistics Provider</DialogTitle>
-            <DialogDescription>Select a logistics provider for this shipment</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Label>Provider</Label>
-            <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {providers.length === 0 && (
-                  <SelectItem value=" " disabled>No providers available</SelectItem>
-                )}
-                {providers.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.companyName} {p.isVerified ? "✓" : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAssignOpen(false)}>Cancel</Button>
-            <Button onClick={handleAssign} disabled={actionLoading || !selectedProvider}>
-              {actionLoading ? "Assigning..." : "Assign"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

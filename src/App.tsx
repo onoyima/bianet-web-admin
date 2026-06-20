@@ -15,14 +15,17 @@ import AdminDashboard from "@/pages/admin/dashboard";
 import AdminKyc from "@/pages/admin/kyc";
 import AdminUsers from "@/pages/admin/users";
 import AdminUserDetail from "@/pages/admin/users/[id]";
+import AdminWallets from "@/pages/admin/wallets";
 import AdminSeedListings from "@/pages/admin/seed-listings";
 import AdminSeedListingDetail from "@/pages/admin/seed-listings/[id]";
 import AdminBartarListings from "@/pages/admin/bartar-listings";
 import AdminBartarListingDetail from "@/pages/admin/bartar-listings/[id]";
 import AdminLogs from "@/pages/admin/logs";
 import AdminEscrow from "@/pages/admin/escrow";
+import AdminEscrowDetail from "@/pages/admin/escrow/[id]";
 import AdminEducationalContent from "@/pages/admin/educational-content";
 import AdminLogistics from "@/pages/admin/logistics";
+import AdminLogisticsDetail from "@/pages/admin/logistics/[id]";
 import AdminVendors from "@/pages/admin/vendors";
 import AdminEnterprises from "@/pages/admin/enterprises";
 import AdminOrderManagement from "@/pages/admin/orders";
@@ -77,14 +80,17 @@ function ProtectedRoutes() {
         <Route path="/admin/kyc" component={AdminKyc} />
         <Route path="/admin/users" component={AdminUsers} />
         <Route path="/admin/users/:id" component={AdminUserDetail} />
+        <Route path="/admin/wallets" component={AdminWallets} />
         <Route path="/admin/logs" component={AdminLogs} />
         <Route path="/admin/escrow" component={AdminEscrow} />
+        <Route path="/admin/escrow/:id" component={AdminEscrowDetail} />
         <Route path="/admin/seed-listings" component={AdminSeedListings} />
         <Route path="/admin/seed-listings/:id" component={AdminSeedListingDetail} />
         <Route path="/admin/bartar-listings" component={AdminBartarListings} />
         <Route path="/admin/bartar-listings/:id" component={AdminBartarListingDetail} />
         <Route path="/admin/educational-content" component={AdminEducationalContent} />
         <Route path="/admin/logistics" component={AdminLogistics} />
+        <Route path="/admin/logistics/:id" component={AdminLogisticsDetail} />
         <Route path="/admin/vendors" component={AdminVendors} />
         <Route path="/admin/enterprises" component={AdminEnterprises} />
         <Route path="/admin/orders" component={AdminOrderManagement} />

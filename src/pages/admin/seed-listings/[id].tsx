@@ -28,7 +28,8 @@ import { customFetch } from "@workspace/api-client-react";
 
 interface SeedListing {
   id: string;
-  sellerId: string;
+  sellerId?: string;
+  seller_id?: string;
   title: string;
   description: string;
   price: number;
@@ -39,11 +40,28 @@ interface SeedListing {
   status: string;
   state: string | null;
   country: string;
-  isFeatured: boolean;
-  viewCount: number;
-  imageUrls: string[] | null;
-  createdAt: string;
-  updatedAt: string;
+  isFeatured?: boolean;
+  is_featured?: boolean;
+  viewCount?: number;
+  view_count?: number;
+  imageUrls?: string[] | null;
+  image_urls?: string[] | null;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+}
+
+function camelize(str: string): string {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+function toCamelCase(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const key of Object.keys(obj)) {
+    result[camelize(key)] = obj[key];
+  }
+  return result;
 }
 
 export default function SeedListingDetail() {
@@ -90,14 +108,15 @@ export default function SeedListingDetail() {
     }
   };
 
-  const { data: listing, isLoading, isError, error } = useQuery({
+  const { data: rawListing, isLoading, isError, error } = useQuery({
     queryKey: ["seedListing", id],
     queryFn: async () => {
-      const res = await customFetch<SeedListing>(`/api/v1/admin/listings/seed/${id}`);
-      return res;
+      const res = await customFetch<Record<string, unknown>>(`/api/v1/admin/listings/seed/${id}`);
+      return toCamelCase(res) as unknown as SeedListing;
     },
     retry: false,
   });
+  const listing = rawListing;
 
   const updateListing = useMutation({
     mutationFn: async (data: Partial<SeedListing>) => {
