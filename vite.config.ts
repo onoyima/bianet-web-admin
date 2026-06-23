@@ -36,7 +36,7 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: "https://dev.bianettechltd.com",
         changeOrigin: true,
       },
     },
