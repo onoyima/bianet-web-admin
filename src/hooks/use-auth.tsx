@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         {
           onSuccess: async (data) => {
             setAuth(data.accessToken, data.refreshToken, null); // Set tokens first
-            sessionStorage.setItem("accessToken", data.accessToken);
+        sessionStorage.setItem("accessToken", res.accessToken);
             // Now fetch the user profile
             await fetchUserProfile(data.accessToken);
             setLoading(false);
