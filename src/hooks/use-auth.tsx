@@ -1,5 +1,6 @@
 import { useEffect, ReactNode } from "react";
 import { setAuthTokenGetter, setUnauthorizedHandler, useAuthStore, useLogin, useRegister, useRefreshToken, useLogout, customFetch } from "@workspace/api-client-react";
+import type { TokenResponse } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -26,14 +27,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
       try {
-        const res = await fetch("/api/v1/auth/refresh", {
+        const res = await customFetch<TokenResponse>("/api/v1/auth/refresh", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken: storedRefresh }),
         });
-        if (!res.ok) throw new Error("Refresh failed");
-        const data = await res.json();
-        setAuth(data.accessToken, data.refreshToken, useAuthStore.getState().user);
+        setAuth(res.accessToken, res.refreshToken, useAuthStore.getState().user);
         sessionStorage.setItem("accessToken", data.accessToken);
         return true;
       } catch {
